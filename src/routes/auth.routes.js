@@ -14,4 +14,4 @@ router.get('/verify',authRequired,profile);
 
 
 //agregar a express 
-export default router
+export default router;

@@ -1,47 +1,45 @@
-
 import { Link } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-function Navbar(){
 
-    const{isAuthenticated,logout,user}=useAuth();
-    return(
-        <nav className="bg-zinc-700 my-3 flex justify-between py-5 px-10 rounded-lg">
-            <Link to={
-                isAuthenticated ? "/tasks":"/"
-            }>
-                <h1 className="text-2xl font-bold">Gestión de tareas</h1>
-            </Link>
-            <ul className="flex gap-x-2">
-                {isAuthenticated ? (
-                    <>
-                    <li>
-                        Bienvenido {user.username}
-                    </li>
-                    <li>
-                        <Link to='/add-task'
-                        className="bg-indigo-500 px-4 py-1 rounded-sm">Agrega una tarea</Link>
-                    </li>
-                    <li>
-                        <Link to='/' onClick={()=>{
-                            logout();
-                        }}>Cerrar Sesión</Link>
-                    </li>
-                    </>
-                ):(
-                    <>
-                    <li>
-                        <Link to='/login'
-                        className="bg-indigo-500 px-4 py-1 rounded-sm">Inicio Sesión</Link>
-                    </li>
-                    <li>
-                        <Link to='/register'
-                        className="bg-indigo-500 px-4 py-1 rounded-sm">Registro</Link>
-                    </li>
-                    </>
-                )}
-            </ul>
-        </nav>
-    )
+function Navbar() {
+  const { isAuthenticated, logout } = useAuth();
+
+  return (
+    <nav className="bg-white my-3 flex justify-between py-5 px-10 rounded-lg">
+      <h1 className="text-2xl font-bold text-black">Clan Niggaz</h1>
+
+      <ul className="flex gap-x-4">
+        {isAuthenticated ? (
+          <>
+            <li>
+              <Link to="/" className="px-4 py-1 text-black font-bold">Inicio</Link>
+            </li>
+            <li>
+              <Link to="/add-task" className="px-4 py-1 text-black font-bold">Reservas</Link>
+            </li>
+            <li>
+              <Link to="/room" className="px-4 py-1 text-black font-bold">Nuestro Estudio</Link>
+            </li>
+            <li>
+              <Link to="/" onClick={logout} className="px-4 py-1 text-black font-bold">Cerrar Sesión</Link>
+            </li>
+          </>
+        ) : (
+          <>
+            <li>
+              <Link to="/login" className="px-4 py-1 text-black font-bold">Iniciar Sesión</Link>
+            </li>
+            <li>
+              <Link to="/register" className="px-4 py-1 text-black font-bold">Registro</Link>
+            </li>
+            <li>
+              <Link to="/room" className="px-4 py-1 text-black font-bold">Nuestro Estudio</Link>
+            </li>
+          </>
+        )}
+      </ul>
+    </nav>
+  );
 }
 
 export default Navbar;

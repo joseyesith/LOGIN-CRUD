@@ -1,5 +1,5 @@
-const PORT=process.env.PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/MERN';
+const PORT=process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/MERN';
 
 export {MONGODB_URI,PORT};
 

@@ -1,12 +1,17 @@
 import axios from "./axios.js";
 
-export const getTasksRequest=()=>axios.get('/tasks');
+// Obtener todas las tareas
+export const getTasksRequest = () => axios.get('/tasks');
 
-export const getTaskRequest=(id)=>axios.get(`/tasks/${id}`);
+// Obtener una tarea por ID
+export const getTaskRequest = (id) => axios.get(`/tasks/${id}`);
 
-export const createTaskRequest=(task)=>axios.post('/tasks',task);
+// Crear una nueva tarea
+export const createTaskRequest = (task) => axios.post('/tasks', task);
 
-export const updateTaskRequest=(id,task)=>
-axios.put(`/tasks/${id}`,task);
+// Actualizar una tarea existente
+export const updateTaskRequest = (id, task) => 
+  axios.put(`/tasks/${id}`, task);
 
-export const deleteTaskRequest=(id)=>axios.get(`/tasks/${id}`);
+// Eliminar una tarea
+export const deleteTaskRequest = (id) => axios.delete(`/tasks/${id}`);

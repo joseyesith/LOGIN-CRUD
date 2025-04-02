@@ -1,26 +1,31 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     username: {
-       type: String,
-       required:true,
-       trim:true
+      type: String,
+      required: true,
     },
-    email:{
-        type:String,
-        required:true,
-        trim:true,
-        unique:true
-        
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    password:{
-        type:String,
-        required:true,
-    }
-},{
-        timestamps:true
-    })
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user", // Por defecto, el rol será "user"
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-//Interactuar con los métodos.
-export default mongoose.model('User',userSchema)
+export default mongoose.model("User", userSchema);
+
 

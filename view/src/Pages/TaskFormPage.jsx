@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTasks } from "../Context/TasksContext";
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -7,7 +6,6 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 
 function TaskFormPage() {
-  const { createTask, getTask, updateTask } = useTasks();
   const navigate = useNavigate();
   const params = useParams();
   const [selectedDate, setSelectedDate] = useState("");
@@ -24,26 +22,35 @@ function TaskFormPage() {
   useEffect(() => {
     async function loadTask() {
       if (params.id) {
-        const task = await getTask(params.id);
-        setSelectedDate(dayjs(task.date).utc().format("YYYY-MM-DD"));
-        setSelectedTime(task.time || "");
-        setUserData({
-          name: task.name || "",
-          email: task.email || "",
-          phone: task.phone || "",
-        });
+        const response = await fetch(`http://localhost:4000/api/tasks/${params.id}`);
+        if (response.ok) {
+          const task = await response.json();
+          setSelectedDate(dayjs(task.date).utc().format("YYYY-MM-DD"));
+          setSelectedTime(task.time || "");
+          setUserData({
+            name: task.name || "",
+            email: task.email || "",
+            phone: task.phone || "",
+          });
+        } else {
+          console.error("Error al cargar la tarea.");
+        }
       }
     }
     loadTask();
-  }, []);
+  }, [params.id]);
 
-  const handleReserve = () => {
+  const handleReserve = async (e) => {
+    e.preventDefault();
+
     if (!selectedDate || !selectedTime || !userData.name || !userData.email || !userData.phone) {
       alert("Por favor, completa todos los campos.");
       return;
     }
 
     const reservation = {
+      title: "Reserva de estudio",
+      description: "Reserva para sesión de grabación",
       date: selectedDate,
       time: selectedTime,
       name: userData.name,
@@ -51,29 +58,33 @@ function TaskFormPage() {
       phone: userData.phone,
     };
 
-    if (params.id) {
-      updateTask(params.id, reservation);
-    } else {
-      createTask(reservation);
-    }
+    try {
+      const response = await fetch("http://localhost:4000/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reservation),
+      });
 
-    alert("Reserva confirmada con éxito.");
-    navigate("/tasks");
+      if (response.ok) {
+        alert("Reserva creada con éxito.");
+        navigate("/tasks");
+      } else {
+        alert("Error al crear la reserva.");
+      }
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+      alert("Hubo un problema al realizar la reserva.");
+    }
   };
 
   return (
     <div className="flex flex-col items-center w-full bg-white min-h-screen">
-      {/* Imagen del encabezado con título grande */}
       <div className="bg-[url('/tete.jpg')] bg-cover bg-center flex h-[30vh] w-[100%] items-center justify-center text-white text-6xl font-bold rounded-lg">
         RESERVA UNA SESIÓN
       </div>
 
-      {/* Contenedor principal con display flex */}
       <div className="bg-white max-w-4xl w-full p-10 rounded-md text-black mt-6 shadow-lg flex flex-col md:flex-row gap-10">
-        
-        {/* Columna izquierda: Fecha y horarios */}
         <div className="md:w-1/2 flex flex-col">
-          {/* Selector de Fecha */}
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-1">Selecciona una Fecha:</label>
             <input
@@ -84,7 +95,6 @@ function TaskFormPage() {
             />
           </div>
 
-          {/* Tabla de horarios */}
           {selectedDate && (
             <div className="bg-gray-100 p-4 rounded-md shadow-md">
               <table className="w-full text-left">
@@ -118,7 +128,6 @@ function TaskFormPage() {
           )}
         </div>
 
-        {/* Columna derecha: Formulario de usuario */}
         {selectedTime && (
           <div className="md:w-1/2 bg-gray-100 p-6 rounded-md shadow-md">
             <h2 className="text-xl font-bold mb-4 text-center">Datos del Usuario</h2>
@@ -157,7 +166,7 @@ function TaskFormPage() {
               </div>
 
               <button
-                type="button"
+                type="submit"
                 onClick={handleReserve}
                 className="w-full bg-blue-500 text-white py-2 rounded-md font-bold"
               >

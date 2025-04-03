@@ -22,18 +22,24 @@ function TaskFormPage() {
   useEffect(() => {
     async function loadTask() {
       if (params.id) {
-        const response = await fetch(`http://localhost:4000/api/tasks/${params.id}`);
-        if (response.ok) {
-          const task = await response.json();
-          setSelectedDate(dayjs(task.date).utc().format("YYYY-MM-DD"));
-          setSelectedTime(task.time || "");
-          setUserData({
-            name: task.name || "",
-            email: task.email || "",
-            phone: task.phone || "",
+        try {
+          const response = await fetch(`http://localhost:4000/api/tasks/${params.id}`, {
+            credentials: "include", // Enviar cookies (token de sesión)
           });
-        } else {
-          console.error("Error al cargar la tarea.");
+          if (response.ok) {
+            const task = await response.json();
+            setSelectedDate(dayjs(task.date).utc().format("YYYY-MM-DD"));
+            setSelectedTime(task.time || "");
+            setUserData({
+              name: task.name || "",
+              email: task.email || "",
+              phone: task.phone || "",
+            });
+          } else {
+            console.error("Error al cargar la tarea.");
+          }
+        } catch (error) {
+          console.error("Error en la solicitud: ", error);
         }
       }
     }
@@ -61,13 +67,18 @@ function TaskFormPage() {
     try {
       const response = await fetch("http://localhost:4000/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Enviar cookies (token de sesión)
         body: JSON.stringify(reservation),
       });
 
       if (response.ok) {
         alert("Reserva creada con éxito.");
         navigate("/tasks");
+      } else if (response.status === 401) {
+        alert("No estás autenticado. Inicia sesión para hacer una reserva.");
       } else {
         alert("Error al crear la reserva.");
       }
@@ -181,3 +192,4 @@ function TaskFormPage() {
 }
 
 export default TaskFormPage;
+

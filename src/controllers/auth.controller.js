@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config.js";
@@ -9,30 +9,32 @@ export const register = async (req, res) => {
 
     try {
         const userFound = await User.findOne({ email });
-        if (userFound) return res.status(400).json(['El email ya está en uso']);
+        if (userFound) return res.status(400).json({ message: "El email ya está en uso" });
 
-        const passwordHash = await bcrypt.hash(password, 10); // Encriptar contraseña
+        const passwordHash = await bcrypt.hash(password, 10);
 
-        // Aquí agregamos el rol "admin" cuando creamos el usuario
         const newUser = new User({
             username,
             email,
             password: passwordHash,
-            role: "admin",  // Aquí definimos que el nuevo usuario será un admin
+            role: "admin",
         });
 
         const userSaved = await newUser.save();
-
-        // Generar el token JWT
         const token = await createAccessToken({ id: userSaved._id });
 
-        res.cookie('token', token);
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+        });
+
+        console.log("Cookie establecida en /register:", token);
+
         res.json({
             id: userSaved._id,
             username: userSaved.username,
             email: userSaved.email,
-            createdAt: userSaved.createdAt,
-            updatedAt: userSaved.updatedAt,
         });
 
     } catch (error) {
@@ -52,13 +54,18 @@ export const login = async (req, res) => {
 
         const token = await createAccessToken({ id: userFound._id });
 
-        res.cookie('token', token);
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+        });
+
+        console.log("Cookie establecida en /login:", token);
+
         res.json({
             id: userFound._id,
             username: userFound.username,
             email: userFound.email,
-            createdAt: userFound.createdAt,
-            updatedAt: userFound.updatedAt,
         });
 
     } catch (error) {
@@ -67,31 +74,40 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-    res.cookie('token', "", { expires: new Date(0) });
+    res.cookie("token", "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        expires: new Date(0), // Expira inmediatamente
+    });
     return res.sendStatus(200);
 };
 
 export const profile = async (req, res) => {
-    const userFound = await User.findById(req.user.id);
-    if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" });
+    try {
+        const userFound = await User.findById(req.user.id);
+        if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" });
 
-    return res.json({
-        id: userFound._id,
-        username: userFound.username,
-        email: userFound.email,
-        createdAt: userFound.createdAt,
-        updatedAt: userFound.updatedAt,
-    });
+        return res.json({
+            id: userFound._id,
+            username: userFound.username,
+            email: userFound.email,
+            createdAt: userFound.createdAt,
+            updatedAt: userFound.updatedAt,
+        });
+
+    } catch (error) {
+        return res.status(500).json({ message: "Error en el perfil" });
+    }
 };
 
 export const verifyToken = async (req, res) => {
-    const { token } = req.cookies;
+    const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-    jwt.verify(token, TOKEN_SECRET, async (err, user) => {
-        if (err) return res.status(401).json({ message: "Unauthorized" });
-
-        const userFound = await User.findById(user.id);
+    try {
+        const decoded = jwt.verify(token, TOKEN_SECRET);
+        const userFound = await User.findById(decoded.id);
 
         if (!userFound) return res.status(401).json({ message: "Unauthorized" });
 
@@ -100,5 +116,8 @@ export const verifyToken = async (req, res) => {
             username: userFound.username,
             email: userFound.email,
         });
-    });
+
+    } catch (error) {
+        return res.status(401).json({ message: "Token inválido o expirado" });
+    }
 };
